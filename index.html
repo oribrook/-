@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <title>יוצר דפי אותיות</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <!-- Add additional fonts for Hebrew handwriting -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Rubik:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @font-face {
+        font-family: "HebrewHandwritten";
+        src: url("https://cdn.jsdelivr.net/gh/mannprerak2/hebrew-fonts@main/fonts/Keter-YG-Medium.woff2")
+            format("woff2"),
+          url("https://cdn.jsdelivr.net/gh/mannprerak2/hebrew-fonts@main/fonts/Keter-YG-Medium.woff")
+            format("woff");
+        font-weight: normal;
+        font-style: normal;
+      }
+      body {
+        font-family: "Arial", sans-serif;
+        direction: rtl;
+        background-color: #f0f4f8;
+      }
+      .letter-checkbox:checked + label {
+        background-color: #3182ce;
+        color: white;
+        border-color: #3182ce;
+      }
+      .worksheet {
+        width: 210mm;
+        height: 297mm;
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        box-sizing: border-box;
+        margin: 0 auto;
+        padding: 10mm;
+        page-break-after: always;
+      }
+      .letter-box {
+        border: 0px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        aspect-ratio: 1/1;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1;
+      }
+      .error-highlight {
+        background-color: #fff5f5;
+        border-color: #ff4136;
+      }
+      .warning-text {
+        color: #ff4136;
+      }
+      .font-normal {
+        font-family: Georgia, "Times New Roman", Times, serif;
+      }
+
+      .font-handwritten {
+        font-family: "HebrewHandwritten", "Amatic SC", "Guttman Yad", "David",
+          "Rubik", cursive;
+        font-weight: bold;
+      }
+      @media print {
+        body {
+          background-color: white;
+        }
+        .no-print {
+          display: none;
+        }
+        .worksheet {
+          box-shadow: none;
+        }
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .tab {
+        cursor: pointer;
+      }
+      .tab.active {
+        background-color: #3182ce;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-4">
+    <div
+      id="setupPage"
+      class="container mx-auto bg-white shadow-lg rounded-lg p-8 max-w-4xl w-full"
+    >
+      <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">
+        יוצר דף אותיות
+      </h1>
+
+      <!-- Language/Letter Type Tabs -->
+      <div class="mb-6">
+        <div class="flex border-b border-gray-200">
+          <div
+            id="tab-hebrew"
+            class="tab active px-4 py-2 border-b-2 border-blue-500"
+          >
+            עברית
+          </div>
+          <div id="tab-english" class="tab px-4 py-2">אנגלית</div>
+        </div>
+
+        <!-- Hebrew Tab Content -->
+        <div id="content-hebrew" class="tab-content active mt-4">
+          <div class="flex space-x-4 space-x-reverse mb-4">
+          
+          </div>
+          <h2 class="text-xl font-semibold mb-4 text-gray-700">
+            בחר אותיות עברית:
+          </h2>
+          <div id="hebrew-selection" class="grid grid-cols-7 gap-3">
+            <!-- Hebrew alphabet letters will be dynamically added here -->
+          </div>
+        </div>
+
+        <!-- English Tab Content -->
+        <div id="content-english" class="tab-content mt-4">
+          <div class="flex space-x-4 space-x-reverse mb-4">
+            <label class="inline-flex items-center">
+              <input
+                type="radio"
+                name="english-case"
+                value="uppercase"
+                class="form-radio"
+                checked
+              />
+              <span class="ml-2">אותיות גדולות</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input
+                type="radio"
+                name="english-case"
+                value="lowercase"
+                class="form-radio"
+              />
+              <span class="ml-2">אותיות קטנות</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input
+                type="radio"
+                name="english-case"
+                value="both"
+                class="form-radio"
+              />
+              <span class="ml-2">שניהם</span>
+            </label>
+          </div>
+          <h2 class="text-xl font-semibold mb-4 text-gray-700">
+            בחר אותיות אנגלית:
+          </h2>
+          <div id="english-selection" class="grid grid-cols-7 gap-3">
+            <!-- English alphabet letters will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Worksheet Options -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">
+          הגדרות דף עבודה:
+        </h2>
+
+        <div class="flex flex-wrap mb-4">
+          <div class="w-full md:w-1/2 mb-4 md:mb-0 md:pr-2">
+            <label class="block text-gray-700 mb-2">מספר אותיות בדף:</label>
+            <input
+              type="number"
+              id="letterCount"
+              min="1"
+              max="250"
+              value="63"
+              class="w-full p-2 border rounded"
+            />
+            <p class="text-xs text-gray-500 mt-1">מקסימום מומלץ: 250 אותיות</p>
+          </div>
+          <!-- Font size removed as it will be automatically calculated -->
+        </div>
+      </div>
+
+      <div id="percentageSection" class="mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-700">
+            קבע אחוזים לאותיות שנבחרו:
+          </h2>
+          <div id="totalPercentage" class="text-lg font-bold"></div>
+        </div>
+        <div id="percentageInputs" class="space-y-3">
+          <!-- Percentage inputs will be dynamically added here -->
+        </div>
+        <div
+          id="percentageWarning"
+          class="mt-4 hidden warning-text text-center"
+        ></div>
+      </div>
+
+      <div class="flex space-x-4 space-x-reverse">
+        <button
+          id="generateBtn"
+          class="flex-grow bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none"
+        >
+          צור דף אותיות
+        </button>
+        <button
+          id="autoFixBtn"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none"
+        >
+          תיקון אוטומטי
+        </button>
+        <button
+          id="equalDistributeBtn"
+          class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none"
+        >
+          חלוקה שווה
+        </button>
+      </div>
+    </div>
+
+    <div id="worksheetPage" class="hidden">
+      <div class="no-print flex justify-between my-4">
+        <button
+          id="backToSetupBtn"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+        >
+          חזרה להגדרות
+        </button>
+        <button
+          id="printBtn"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+        >
+          הדפס
+        </button>
+      </div>
+      <div class="worksheet" id="letterWorksheet"></div>
+      <div
+        id="randomLetterInfo"
+        class="mt-4 text-center text-gray-700 no-print"
+      ></div>
+    </div>
+
+    <script>
+      // Alphabets
+      const hebrewAlphabet = "אבגדהוזחטיכךלמםנןסעפףצץקרשת";
+      const englishUppercaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const englishLowercaseAlphabet = "abcdefghijklmnopqrstuvwxyz";
+
+      // DOM Elements
+      const hebrewSelection = document.getElementById("hebrew-selection");
+      const englishSelection = document.getElementById("english-selection");
+      const percentageSection = document.getElementById("percentageSection");
+      const percentageInputs = document.getElementById("percentageInputs");
+      const totalPercentageDisplay = document.getElementById("totalPercentage");
+      const percentageWarning = document.getElementById("percentageWarning");
+      const autoFixBtn = document.getElementById("autoFixBtn");
+      const equalDistributeBtn = document.getElementById("equalDistributeBtn");
+      const generateBtn = document.getElementById("generateBtn");
+      const letterCountInput = document.getElementById("letterCount");
+
+      // Tab Elements
+      const tabHebrew = document.getElementById("tab-hebrew");
+      const tabEnglish = document.getElementById("tab-english");
+      const contentHebrew = document.getElementById("content-hebrew");
+      const contentEnglish = document.getElementById("content-english");
+
+      // Current Selection State
+      let currentLanguage = "hebrew";
+      let hebrewStyle = "normal";
+      let englishCase = "uppercase";
+
+      // Initialize UI
+      initializeTabs();
+      createLetterSelections();
+      updatePercentageInputs();
+
+      // Initialize Tabs
+      function initializeTabs() {
+        tabHebrew.addEventListener("click", () => switchTab("hebrew"));
+        tabEnglish.addEventListener("click", () => switchTab("english"));
+
+        // Radio button event listeners
+        document
+          .querySelectorAll('input[name="hebrew-style"]')
+          .forEach((radio) => {
+            radio.addEventListener("change", function () {
+              hebrewStyle = this.value;
+            });
+          });
+
+        document
+          .querySelectorAll('input[name="english-case"]')
+          .forEach((radio) => {
+            radio.addEventListener("change", function () {
+              englishCase = this.value;
+              recreateEnglishSelection();
+            });
+          });
+      }
+
+      function switchTab(tab) {
+        // Update tab styling
+        tabHebrew.classList.toggle("active", tab === "hebrew");
+        tabEnglish.classList.toggle("active", tab === "english");
+
+        // Show/hide content
+        contentHebrew.classList.toggle("active", tab === "hebrew");
+        contentEnglish.classList.toggle("active", tab === "english");
+
+        currentLanguage = tab;
+        updatePercentageInputs();
+      }
+
+      // Create Letter Selection Checkboxes
+      function createLetterSelections() {
+        // Create Hebrew letter checkboxes
+        hebrewAlphabet.split("").forEach((letter) => {
+          hebrewSelection.appendChild(createLetterCheckbox(letter, "hebrew"));
+        });
+
+        // Create English letter checkboxes (initial with uppercase)
+        recreateEnglishSelection();
+      }
+
+      function recreateEnglishSelection() {
+        englishSelection.innerHTML = "";
+
+        if (englishCase === "uppercase" || englishCase === "both") {
+          englishUppercaseAlphabet.split("").forEach((letter) => {
+            englishSelection.appendChild(
+              createLetterCheckbox(letter, "english")
+            );
+          });
+        }
+
+        if (englishCase === "lowercase" || englishCase === "both") {
+          englishLowercaseAlphabet.split("").forEach((letter) => {
+            englishSelection.appendChild(
+              createLetterCheckbox(letter, "english")
+            );
+          });
+        }
+
+        // Reattach event listeners
+        englishSelection
+          .querySelectorAll(".letter-checkbox")
+          .forEach((checkbox) => {
+            checkbox.addEventListener("change", updatePercentageInputs);
+          });
+      }
+
+      function createLetterCheckbox(letter, language) {
+        const checkboxWrapper = document.createElement("div");
+        const id = `letter-${language}-${letter}`;
+
+        checkboxWrapper.innerHTML = `
+                <input 
+                    type="checkbox" 
+                    id="${id}" 
+                    value="${letter}" 
+                    class="letter-checkbox hidden"
+                    data-language="${language}"
+                >
+                <label 
+                    for="${id}" 
+                    class="block text-center text-2xl border-2 border-gray-300 rounded-lg py-2 cursor-pointer hover:bg-blue-100 transition duration-300"
+                >
+                    ${letter}
+                </label>
+            `;
+
+        // Add event listener
+        const checkbox = checkboxWrapper.querySelector("input");
+        checkbox.addEventListener("change", updatePercentageInputs);
+
+        return checkboxWrapper;
+      }
+
+      // Update Percentage Inputs
+      function updatePercentageInputs() {
+        percentageInputs.innerHTML = "";
+        totalPercentageDisplay.textContent = "";
+        percentageWarning.classList.add("hidden");
+
+        const currentTab =
+          currentLanguage === "hebrew" ? contentHebrew : contentEnglish;
+        const selectedLetters = Array.from(
+          currentTab.querySelectorAll(".letter-checkbox:checked")
+        );
+
+        if (selectedLetters.length > 0) {
+          percentageSection.classList.remove("hidden");
+          const defaultPercentage = Math.floor(100 / selectedLetters.length);
+
+          selectedLetters.forEach((checkbox) => {
+            const letter = checkbox.value;
+            const inputWrapper = document.createElement("div");
+            inputWrapper.classList.add(
+              "flex",
+              "items-center",
+              "space-x-2",
+              "space-x-reverse"
+            );
+
+            inputWrapper.innerHTML = `
+                        <span class="text-xl font-semibold">${letter}</span>
+                        <input 
+                            type="number" 
+                            min="0" 
+                            value="${defaultPercentage}" 
+                            class="flex-grow p-2 border rounded text-center percentage-input"
+                            data-letter="${letter}"
+                        >
+                        <span class="text-lg">%</span>
+                    `;
+
+            percentageInputs.appendChild(inputWrapper);
+          });
+
+          attachPercentageListeners();
+          calculateTotalPercentage();
+        } else {
+          percentageSection.classList.add("hidden");
+        }
+      }
+
+      function attachPercentageListeners() {
+        const percentageInputsList =
+          document.querySelectorAll(".percentage-input");
+        percentageInputsList.forEach((input) => {
+          input.addEventListener("input", calculateTotalPercentage);
+        });
+      }
+
+      function calculateTotalPercentage() {
+        const percentageInputsList =
+          document.querySelectorAll(".percentage-input");
+        let total = 0;
+        let hasNegative = false;
+
+        percentageInputsList.forEach((input) => {
+          const value = parseInt(input.value) || 0;
+          if (value < 0) hasNegative = true;
+          total += value;
+        });
+
+        totalPercentageDisplay.textContent = `סה"כ: ${total}%`;
+        totalPercentageDisplay.classList.remove(
+          "text-red-600",
+          "text-green-600"
+        );
+        generateBtn.disabled = false;
+
+        if (hasNegative) {
+          totalPercentageDisplay.classList.add("text-red-600");
+          percentageWarning.textContent = "אין להזין אחוזים שליליים";
+          percentageWarning.classList.remove("hidden");
+          generateBtn.disabled = true;
+          return;
+        }
+
+        if (total > 100) {
+          totalPercentageDisplay.classList.add("text-red-600");
+          percentageWarning.textContent = `סך כל האחוזים גדול מ-100%. עליך להפחית ${
+            total - 100
+          }%`;
+          percentageWarning.classList.remove("hidden");
+          generateBtn.disabled = true;
+        } else if (total < 100) {
+          totalPercentageDisplay.classList.add("text-red-600");
+          percentageWarning.textContent = `סך כל האחוזים קטן מ-100%. יתווספו אותיות אקראיות בכמות של ${
+            100 - total
+          }%`;
+          percentageWarning.classList.remove("hidden");
+          generateBtn.disabled = false;
+        } else {
+          totalPercentageDisplay.classList.add("text-green-600");
+          percentageWarning.classList.add("hidden");
+          generateBtn.disabled = false;
+        }
+      }
+
+      // Fix Percentages
+      function autoFixPercentages() {
+        const percentageInputsList =
+          document.querySelectorAll(".percentage-input");
+        const total = Array.from(percentageInputsList).reduce(
+          (sum, input) => sum + (parseInt(input.value) || 0),
+          0
+        );
+
+        if (total > 100) {
+          // Proportionally reduce percentages
+          const scaleFactor = 100 / total;
+          percentageInputsList.forEach((input) => {
+            const currentValue = parseInt(input.value) || 0;
+            input.value = Math.max(1, Math.floor(currentValue * scaleFactor));
+          });
+        } else if (total < 100) {
+          // Distribute remaining percentage among all inputs
+          const remainingPercentage = 100 - total;
+          const perInputIncrease = Math.floor(
+            remainingPercentage / percentageInputsList.length
+          );
+          let remainder =
+            remainingPercentage -
+            perInputIncrease * percentageInputsList.length;
+
+          percentageInputsList.forEach((input) => {
+            const currentValue = parseInt(input.value) || 0;
+            input.value =
+              currentValue + perInputIncrease + (remainder > 0 ? 1 : 0);
+            if (remainder > 0) remainder--;
+          });
+        }
+
+        calculateTotalPercentage();
+      }
+
+      function equalDistributePercentages() {
+        const percentageInputsList =
+          document.querySelectorAll(".percentage-input");
+        const count = percentageInputsList.length;
+
+        if (count === 0) return;
+
+        const baseValue = Math.floor(100 / count);
+        let remainder = 100 - baseValue * count;
+
+        percentageInputsList.forEach((input) => {
+          input.value = baseValue + (remainder > 0 ? 1 : 0);
+          if (remainder > 0) remainder--;
+        });
+
+        calculateTotalPercentage();
+      }
+
+      // Generate Worksheet
+      function generateWorksheet() {
+        const percentInputs = document.querySelectorAll(".percentage-input");
+        const percentages = {};
+        let total = 0;
+
+        percentInputs.forEach((input) => {
+          const letter = input.dataset.letter;
+          const percent = parseInt(input.value) || 0;
+          percentages[letter] = percent;
+          total += percent;
+        });
+
+        // Switch to worksheet
+        document.getElementById("setupPage").classList.add("hidden");
+        document.getElementById("worksheetPage").classList.remove("hidden");
+
+        const worksheet = document.getElementById("letterWorksheet");
+        const randomLetterInfo = document.getElementById("randomLetterInfo");
+        worksheet.innerHTML = "";
+        randomLetterInfo.innerHTML = "";
+
+        // Get font style
+        let fontClass = "font-normal";
+        if (currentLanguage === "hebrew" && hebrewStyle === "handwritten") {
+          fontClass = "font-handwritten";
+        }
+
+        // Get letter count and calculate font size automatically
+        const letterCount = parseInt(letterCountInput.value) || 63;
+
+        // Calculate how many letters can actually fit
+        let gridInfo = calculateGridForLetters(letterCount);
+
+        // If user requested more letters than can fit, adjust letterCount
+        const actualLetterCount = Math.min(letterCount, gridInfo.maxLetters);
+
+        if (actualLetterCount < letterCount) {
+          randomLetterInfo.innerHTML = `<div class="bg-yellow-100 p-2 rounded border border-yellow-400">אזהרה: דף A4 יכול להכיל רק ${actualLetterCount} אותיות מתוך ${letterCount} שביקשת. מציג ${actualLetterCount} אותיות.</div>`;
+        }
+
+        // Update grid info with adjusted letter count if needed
+        if (actualLetterCount !== letterCount) {
+          gridInfo = calculateGridForLetters(actualLetterCount);
+        }
+
+        // Set the grid
+        worksheet.style.gridTemplateColumns = `repeat(${gridInfo.columns}, 1fr)`;
+
+        // Function to calculate the optimal grid layout
+        function calculateGridForLetters(count) {
+          // Determine optimal grid dimensions
+          const columns = Math.ceil(Math.sqrt((count * 9) / 11)); // Approximation for A4
+          const rows = Math.ceil(count / columns);
+
+          // Available space on A4
+          const availableWidth = 190; // mm
+          const availableHeight = 277; // mm
+
+          // Calculate cell dimensions
+          const cellWidth = availableWidth / columns;
+          const cellHeight = availableHeight / rows;
+
+          // Maximum number of cells that can fit on the page
+          const maxCellsPerPage = columns * rows;
+
+          // Calculate font size (70% of cell size for good spacing)
+          const fontSize = Math.min(cellWidth, cellHeight) * 0.7;
+
+          return {
+            columns,
+            rows,
+            cellWidth,
+            cellHeight,
+            fontSize,
+            maxLetters: maxCellsPerPage,
+          };
+        }
+
+        function getRandomLetter() {
+          const rand = Math.random() * 100;
+          let cumulativePercent = 0;
+
+          for (const [letter, percent] of Object.entries(percentages)) {
+            cumulativePercent += percent;
+            if (rand < cumulativePercent) {
+              return letter;
+            }
+          }
+
+          // Fallback: return a random letter from the selected ones
+          const letters = Object.keys(percentages);
+          return letters[Math.floor(Math.random() * letters.length)];
+        }
+
+        // Fill boxes with random letters
+        for (let i = 0; i < actualLetterCount; i++) {
+          const letterBox = document.createElement("div");
+          letterBox.className = `letter-box ${fontClass}`;
+          letterBox.style.fontSize = `${gridInfo.fontSize}mm`;
+          letterBox.textContent = getRandomLetter();
+          worksheet.appendChild(letterBox);
+        }
+
+        // Add random letters info if total is less than 100%
+        if (total < 100) {
+          const randomLetterCount = Math.floor(
+            (letterCount * (100 - total)) / 100
+          );
+          randomLetterInfo.textContent = `הופעלה שכבת אותיות אקראיות: ~${randomLetterCount} אותיות`;
+        }
+      }
+
+      // Event Listeners
+      autoFixBtn.addEventListener("click", autoFixPercentages);
+      equalDistributeBtn.addEventListener("click", equalDistributePercentages);
+      generateBtn.addEventListener("click", generateWorksheet);
+
+      document
+        .getElementById("backToSetupBtn")
+        .addEventListener("click", function () {
+          document.getElementById("worksheetPage").classList.add("hidden");
+          document.getElementById("setupPage").classList.remove("hidden");
+        });
+
+      document
+        .getElementById("printBtn")
+        .addEventListener("click", function () {
+          window.print();
+        });
+    </script>
+  </body>
+</html>
